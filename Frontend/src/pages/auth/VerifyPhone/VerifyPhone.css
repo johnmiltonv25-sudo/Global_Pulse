@@ -1,0 +1,318 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI",sans-serif;
+}
+
+body{
+    overflow-y:auto;
+}
+
+.verify-page{
+
+    width:100%;
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+
+    padding:20px;
+}
+
+.verify-card{
+
+    width:520px;
+
+    background:rgba(10,12,18,.92);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    backdrop-filter:blur(18px);
+
+    border-radius:24px;
+
+    padding:26px 34px;
+
+    box-shadow:
+    0 20px 60px rgba(0,0,0,.45);
+}
+
+/* Back */
+
+.back-btn{
+
+    background:none;
+
+    border:none;
+
+    color:white;
+
+    font-size:18px;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.back-btn:hover{
+
+    color:#4F6CFF;
+}
+
+/* Title */
+
+.verify-title{
+
+    margin-top:22px;
+
+    text-align:center;
+
+    color:white;
+
+    font-size:42px;
+
+    font-weight:700;
+
+    line-height:1.2;
+}
+
+/* Subtitle */
+
+.verify-subtitle{
+
+    margin-top:12px;
+
+    text-align:center;
+
+    color:#C8CBD3;
+
+    font-size:15px;
+
+    line-height:1.6;
+
+    margin-bottom:26px;
+}
+
+/* Label */
+
+.phone-label{
+
+    display:block;
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    margin-bottom:10px;
+}
+
+.phone-row{
+
+    display:flex;
+
+    gap:12px;
+}
+
+.country-code{
+
+    width:90px;
+
+    height:44px;
+
+    background:rgba(255,255,255,.06);
+
+    border:1px solid rgba(255,255,255,.12);
+
+    border-radius:12px;
+
+    color:white;
+
+    font-size:15px;
+
+    outline:none;
+
+    padding:0 12px;
+}
+
+.phone-input{
+
+    flex:1;
+
+    height:44px;
+
+    background:rgba(255,255,255,.06);
+
+    border:1px solid rgba(255,255,255,.12);
+
+    border-radius:12px;
+
+    color:white;
+
+    font-size:15px;
+
+    padding:0 16px;
+
+    outline:none;
+
+    transition:.25s;
+}
+
+.phone-input::placeholder{
+
+    color:#9CA3AF;
+}
+
+.phone-input:focus{
+
+    border-color:#4F6CFF;
+
+    box-shadow:
+    0 0 0 3px rgba(79,108,255,.15);
+}
+/* ===========================
+   CONTINUE BUTTON
+=========================== */
+
+.continue-btn{
+
+    width:100%;
+
+    height:44px;
+
+    margin-top:24px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:linear-gradient(
+        90deg,
+        #4B5DFF,
+        #3F51FF
+    );
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.continue-btn:hover:not(:disabled){
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 10px 22px rgba(79,108,255,.35);
+}
+
+.continue-btn:active{
+
+    transform:scale(.98);
+}
+
+.continue-btn:disabled{
+
+    background:#5F6673;
+
+    cursor:not-allowed;
+
+    box-shadow:none;
+
+    transform:none;
+
+    opacity:.85;
+}
+
+/* ===========================
+   SELECT DROPDOWN
+=========================== */
+
+.country-code option{
+
+    background:#0B0F18;
+
+    color:white;
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media(max-width:768px){
+
+    .verify-card{
+
+        width:100%;
+
+        max-width:420px;
+
+        padding:22px;
+    }
+
+    .verify-title{
+
+        font-size:34px;
+    }
+
+    .verify-subtitle{
+
+        font-size:14px;
+    }
+
+}
+
+@media(max-width:480px){
+
+    .verify-page{
+
+        padding:14px;
+    }
+
+    .verify-card{
+
+        border-radius:18px;
+
+        padding:18px;
+    }
+
+    .verify-title{
+
+        font-size:30px;
+    }
+
+    .verify-subtitle{
+
+        font-size:13px;
+    }
+
+    .phone-row{
+
+        gap:8px;
+    }
+
+    .country-code{
+
+        width:82px;
+    }
+
+    .country-code,
+    .phone-input,
+    .continue-btn{
+
+        height:42px;
+    }
+
+}

@@ -1,0 +1,381 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI",sans-serif;
+}
+
+.complete-profile-page{
+
+    width:100%;
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:20px;
+
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+}
+
+.complete-profile-card{
+
+    width:520px;
+
+    background:rgba(10,12,18,.92);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:24px;
+
+    backdrop-filter:blur(18px);
+
+    padding:28px 34px;
+
+    box-shadow:
+    0 20px 60px rgba(0,0,0,.45);
+
+    color:white;
+}
+
+.complete-profile-back{
+
+    border:none;
+
+    background:none;
+
+    color:white;
+
+    font-size:18px;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.complete-profile-back:hover{
+
+    color:#4F6CFF;
+}
+
+.complete-profile-icon{
+
+    width:72px;
+
+    height:72px;
+
+    margin:18px auto;
+
+    border-radius:50%;
+
+    background:linear-gradient(
+        135deg,
+        #4B5DFF,
+        #2878FF
+    );
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    font-size:34px;
+}
+
+.complete-profile-title{
+
+    text-align:center;
+
+    font-size:40px;
+
+    font-weight:700;
+
+    margin-top:8px;
+}
+
+.complete-profile-subtitle{
+
+    margin-top:10px;
+
+    margin-bottom:26px;
+
+    text-align:center;
+
+    color:#C7CBD4;
+
+    font-size:15px;
+
+    line-height:1.6;
+}
+
+.complete-profile-form{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+}
+/* ===========================
+   EMAIL
+=========================== */
+
+.complete-profile-email{
+
+    position:relative;
+}
+
+.complete-profile-email input{
+
+    width:100%;
+
+    height:44px;
+
+    border:1px solid rgba(255,255,255,.12);
+
+    border-radius:12px;
+
+    background:rgba(255,255,255,.06);
+
+    color:white;
+
+    padding:0 100px 0 16px;
+
+    font-size:15px;
+
+    outline:none;
+
+    transition:.25s;
+}
+
+.complete-profile-email input::placeholder{
+
+    color:#98A2B3;
+}
+
+.complete-profile-email input:focus{
+
+    border-color:#4F6CFF;
+
+    box-shadow:
+    0 0 0 3px rgba(79,108,255,.15);
+}
+
+/* Google Badge */
+
+.complete-profile-badge{
+
+    position:absolute;
+
+    right:10px;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    background:#4F6CFF;
+
+    color:white;
+
+    padding:4px 10px;
+
+    border-radius:8px;
+
+    font-size:11px;
+
+    font-weight:600;
+
+    text-transform:uppercase;
+}
+
+/* ===========================
+   INPUTS
+=========================== */
+
+.complete-profile-form input{
+
+    width:100%;
+
+    height:44px;
+
+    border:1px solid rgba(255,255,255,.12);
+
+    border-radius:12px;
+
+    background:rgba(255,255,255,.06);
+
+    color:white;
+
+    padding:0 16px;
+
+    font-size:15px;
+
+    outline:none;
+
+    transition:.25s;
+}
+
+.complete-profile-form input::placeholder{
+
+    color:#98A2B3;
+}
+
+.complete-profile-form input:focus{
+
+    border-color:#4F6CFF;
+
+    box-shadow:
+    0 0 0 3px rgba(79,108,255,.15);
+}
+/* ===========================
+   CREATE ACCOUNT BUTTON
+=========================== */
+
+.create-account-btn,
+.complete-profile-btn{
+
+    width:100%;
+
+    height:44px;
+
+    margin-top:8px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:linear-gradient(
+        90deg,
+        #4B5DFF,
+        #3F51FF
+    );
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.create-account-btn:hover:not(:disabled),
+.complete-profile-btn:hover:not(:disabled){
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 10px 22px rgba(79,108,255,.35);
+}
+
+.create-account-btn:active,
+.complete-profile-btn:active{
+
+    transform:scale(.98);
+}
+
+.create-account-btn:disabled,
+.complete-profile-btn:disabled{
+
+    background:#5F6673;
+
+    cursor:not-allowed;
+
+    transform:none;
+
+    box-shadow:none;
+
+    opacity:.85;
+}
+
+/* Active */
+
+.create-account-btn.active{
+
+    background:linear-gradient(
+        90deg,
+        #4B5DFF,
+        #3F51FF
+    );
+}
+
+.create-account-btn.active:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 10px 22px rgba(79,108,255,.35);
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media(max-width:768px){
+
+    .complete-profile-card{
+
+        width:100%;
+
+        max-width:420px;
+
+        padding:22px;
+    }
+
+    .complete-profile-title{
+
+        font-size:34px;
+    }
+
+    .complete-profile-subtitle{
+
+        font-size:14px;
+    }
+
+}
+
+@media(max-width:480px){
+
+    .complete-profile-page{
+
+        padding:14px;
+    }
+
+    .complete-profile-card{
+
+        border-radius:18px;
+
+        padding:18px;
+    }
+
+    .complete-profile-title{
+
+        font-size:30px;
+    }
+
+    .complete-profile-subtitle{
+
+        font-size:13px;
+    }
+
+    .complete-profile-icon{
+
+        width:64px;
+
+        height:64px;
+
+        font-size:30px;
+    }
+
+    .complete-profile-email input,
+    .complete-profile-form input,
+    .create-account-btn{
+
+        height:42px;
+    }
+
+}

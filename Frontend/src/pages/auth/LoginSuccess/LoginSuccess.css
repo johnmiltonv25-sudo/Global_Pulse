@@ -1,0 +1,176 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Segoe UI",sans-serif;
+}
+
+.success-page{
+
+    width:100%;
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+
+    padding:20px;
+}
+
+.success-card{
+
+    width:520px;
+
+    background:rgba(10,12,18,.92);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:24px;
+
+    backdrop-filter:blur(18px);
+
+    padding:36px 34px;
+
+    text-align:center;
+
+    box-shadow:
+    0 20px 60px rgba(0,0,0,.45);
+}
+
+.success-icon{
+
+    width:105px;
+
+    margin-bottom:26px;
+
+    filter:
+    drop-shadow(0 0 18px rgba(79,108,255,.45));
+
+    animation:pop .4s ease;
+}
+
+@keyframes pop{
+
+    from{
+
+        transform:scale(.75);
+
+        opacity:0;
+    }
+
+    to{
+
+        transform:scale(1);
+
+        opacity:1;
+    }
+
+}
+
+.success-title{
+
+    color:white;
+
+    font-size:42px;
+
+    font-weight:700;
+
+    line-height:1.25;
+}
+
+.success-subtitle{
+
+    margin-top:18px;
+
+    color:#C8CBD4;
+
+    font-size:15px;
+
+    line-height:1.7;
+}
+
+.dashboard-btn{
+
+    width:100%;
+
+    height:44px;
+
+    margin-top:34px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:
+    linear-gradient(
+        90deg,
+        #4B5DFF,
+        #3F51FF
+    );
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.dashboard-btn:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 10px 24px rgba(79,108,255,.35);
+}
+
+.dashboard-btn:active{
+
+    transform:scale(.98);
+}
+
+@media(max-width:768px){
+
+    .success-card{
+
+        width:100%;
+
+        max-width:420px;
+
+        padding:26px;
+    }
+
+    .success-title{
+
+        font-size:34px;
+    }
+
+}
+
+@media(max-width:480px){
+
+    .success-card{
+
+        border-radius:18px;
+
+        padding:22px;
+    }
+
+    .success-title{
+
+        font-size:30px;
+    }
+
+    .success-icon{
+
+        width:88px;
+    }
+
+}
