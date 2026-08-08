@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import background from "../../../assets/images/space-background.png";
+import { API_BASE_URL } from "../../../config/api.js";
 
 function OTPVerification() {
   const navigate = useNavigate();
@@ -133,7 +134,7 @@ function OTPVerification() {
 
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/api/auth/verify-otp",
+          `${API_BASE_URL}/api/auth/verify-otp`,
           {
             method: "POST",
             headers: {
@@ -208,8 +209,8 @@ function OTPVerification() {
 
       const apiUrl =
         from === "signup"
-          ? "http://127.0.0.1:8000/api/auth/send-signup-otp"
-          : "http://127.0.0.1:8000/api/auth/send-login-otp";
+          ? `${API_BASE_URL}/api/auth/send-signup-otp`
+          : `${API_BASE_URL}/api/auth/send-login-otp`;
 
       const response = await fetch(apiUrl, {
         method: "POST",

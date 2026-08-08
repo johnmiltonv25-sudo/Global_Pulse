@@ -20,16 +20,35 @@ function ResetPassword() {
 
   // TC-19: Password complexity check (>= 6 chars, contains letters and numbers)
   const isComplexityMet = (pwd) => {
-    if (pwd.length < 6) return false;
+    if (!pwd || pwd.length < 6) return false;
     const hasLetter = /[a-zA-Z]/.test(pwd);
     const hasNumber = /[0-9]/.test(pwd);
     return hasLetter && hasNumber;
   };
 
-  // TC-17, TC-21: Button disabled when empty or passwords don't match
+  // Password Strength helper: Weak, Medium, Strong
+  const getPasswordStrength = (pwd) => {
+    if (!pwd) return { label: "", score: 0, color: "#6b7280" };
+    if (pwd.length < 6) {
+      return { label: "Weak (At least 6 characters required)", score: 1, color: "#ef4444" };
+    }
+    const hasLetter = /[a-zA-Z]/.test(pwd);
+    const hasNumber = /[0-9]/.test(pwd);
+    const hasSpecialOrUpper = /[^a-zA-Z0-9]/.test(pwd) || /[A-Z]/.test(pwd);
+
+    if (!hasLetter || !hasNumber) {
+      return { label: "Weak (Requires both letters & numbers)", score: 1, color: "#ef4444" };
+    }
+    if (pwd.length >= 8 && hasSpecialOrUpper) {
+      return { label: "Strong Password", score: 3, color: "#22c55e" };
+    }
+    return { label: "Medium Password", score: 2, color: "#eab308" };
+  };
+
+  // TC-17, TC-21: Button enabled when valid strong password provided & passwords match
   const isFormValid =
-    newPassword.length > 0 &&
-    confirmPassword.length > 0 &&
+    isComplexityMet(newPassword) &&
+    newPassword === confirmPassword &&
     !loading;
 
   const handleResetPassword = async () => {
@@ -100,13 +119,17 @@ function ResetPassword() {
       }}
     >
       <div className="reset-card">
-        <div className="reset-icon" aria-hidden="true">🔒</div>
+        {/* Header Slot */}
+        <div className="reset-header"></div>
 
-        {/* TC-13: Title */}
+        {/* Title */}
         <h1 className="reset-title">Set New Password</h1>
 
+        {/* Subtitle matching reference screenshot */}
         <p className="reset-subtitle">
-          Create a strong password for your account.
+          Your identity has been verified. Create a strong
+          <br />
+          new password for your account.
         </p>
 
         {errorMessage && (
@@ -116,75 +139,105 @@ function ResetPassword() {
         )}
 
         {/* TC-14, TC-16: New Password Field */}
-        <div style={{ position: "relative", width: "100%", marginBottom: "14px" }}>
-          <input
-            id="newPassword"
-            name="newPassword"
-            type={showNewPassword ? "text" : "password"}
-            placeholder="New Password"
-            className="reset-input"
-            value={newPassword}
-            onChange={(e) => {
-              setNewPassword(e.target.value);
-              setErrorMessage("");
-            }}
-            aria-label="New Password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowNewPassword(!showNewPassword)}
-            style={{
-              position: "absolute",
-              right: "12px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "transparent",
-              border: "none",
-              color: "#9ca3af",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-            }}
-            aria-label={showNewPassword ? "Hide password" : "Show password"}
-          >
-            {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
+        <div style={{ width: "100%", marginBottom: "14px" }}>
+          <div style={{ position: "relative", width: "100%" }}>
+            <input
+              id="newPassword"
+              name="newPassword"
+              type={showNewPassword ? "text" : "password"}
+              placeholder="New Password"
+              className="reset-input"
+              value={newPassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                setErrorMessage("");
+              }}
+              style={{ paddingRight: "44px" }}
+              aria-label="New Password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              style={{
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "transparent",
+                border: "none",
+                color: "#6b7280",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                padding: 0,
+                zIndex: 2,
+              }}
+              aria-label={showNewPassword ? "Hide password" : "Show password"}
+            >
+              {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          {newPassword && (
+            <div style={{ marginTop: "8px" }}>
+              {(() => {
+                const strength = getPasswordStrength(newPassword);
+                return (
+                  <div>
+                    <div style={{ display: "flex", gap: "6px", marginBottom: "4px" }}>
+                      <div style={{ flex: 1, height: "4px", borderRadius: "2px", backgroundColor: strength.score >= 1 ? strength.color : "#374151", transition: "all 0.3s" }} />
+                      <div style={{ flex: 1, height: "4px", borderRadius: "2px", backgroundColor: strength.score >= 2 ? strength.color : "#374151", transition: "all 0.3s" }} />
+                      <div style={{ flex: 1, height: "4px", borderRadius: "2px", backgroundColor: strength.score >= 3 ? strength.color : "#374151", transition: "all 0.3s" }} />
+                    </div>
+                    <span style={{ color: strength.color, fontSize: "12px", fontWeight: "600" }}>
+                      {strength.label}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
 
         {/* TC-15, TC-16: Confirm New Password Field */}
-        <div style={{ position: "relative", width: "100%", marginBottom: "18px" }}>
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm New Password"
-            className="reset-input"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              setErrorMessage("");
-            }}
-            aria-label="Confirm New Password"
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            style={{
-              position: "absolute",
-              right: "12px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "transparent",
-              border: "none",
-              color: "#9ca3af",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-            }}
-            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-          >
-            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
+        <div style={{ width: "100%", marginBottom: "18px" }}>
+          <div style={{ position: "relative", width: "100%" }}>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm New Password"
+              className="reset-input"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setErrorMessage("");
+              }}
+              style={{ paddingRight: "44px" }}
+              aria-label="Confirm New Password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={{
+                position: "absolute",
+                right: "12px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "transparent",
+                border: "none",
+                color: "#6b7280",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                padding: 0,
+                zIndex: 2,
+              }}
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
 
         {/* TC-17, TC-21: Reset Password button */}
@@ -193,10 +246,6 @@ function ResetPassword() {
           className="reset-button"
           onClick={handleResetPassword}
           disabled={!isFormValid}
-          style={{
-            opacity: isFormValid ? 1 : 0.5,
-            cursor: isFormValid ? "pointer" : "not-allowed",
-          }}
         >
           {loading ? "Resetting..." : "Reset Password"}
         </button>

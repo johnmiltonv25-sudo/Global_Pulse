@@ -164,26 +164,30 @@ function ForgotOTP() {
       }}
     >
       <div className="forgot-otp-card">
-        <button
-          className="back-btn"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
+        {/* Header Slot */}
+        <div className="forgot-otp-header">
+          <button
+            type="button"
+            className="back-btn"
+            onClick={() => navigate("/forgot-password")}
+            aria-label="Back to Forgot Password"
+          >
+            ← Back
+          </button>
+        </div>
 
-        <h1>
+        {/* Title */}
+        <h1 className="forgot-otp-title">
           Verify Your
           <br />
           Account
         </h1>
 
-        <p>
-          Enter the 6-digit verification code sent to
-          <br />
-          <strong style={{ color: "#ffffff" }}>{identifier}</strong>
+        {/* Subtitle */}
+        <p className="forgot-otp-subtitle">
+          Enter the 6-digit verification code sent to{" "}
+          <strong style={{ color: "#ffffff" }}>{identifier || "+91 1234567890"}</strong>
         </p>
-
-
 
         {toastMessage && (
           <div
@@ -231,8 +235,10 @@ function ForgotOTP() {
               inputMode="numeric"
               maxLength={1}
               value={digit}
+              className="otp-input"
               onChange={(e) => handleChange(e.target.value, index)}
               onKeyDown={(e) => handleKeyDown(e, index)}
+              aria-label={`OTP Digit ${index + 1}`}
             />
           ))}
         </div>
