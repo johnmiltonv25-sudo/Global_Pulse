@@ -350,8 +350,8 @@ export default function Landing() {
               <button className="gp-hero-cta-btn" onClick={openModal}>
                 Create Free Account <ArrowRight size={18} />
               </button>
-              <button className="gp-nav-btn-signup" onClick={openModal}>
-                Sign up
+              <button className="gp-nav-btn-login" onClick={() => navigate('/login')}>
+                Log in
               </button>
             </div>
           </div>

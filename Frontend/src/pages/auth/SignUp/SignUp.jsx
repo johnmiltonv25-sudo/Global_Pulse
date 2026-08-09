@@ -2,20 +2,13 @@ import "./SignUp.css";
 import { useEffect, useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
 
 import logo from "../../../assets/images/logo.png";
 import background from "../../../assets/images/space-background.png";
-import { formatErrorMessage } from "../../../utils/formatError.js";
 import { API_BASE_URL } from "../../../config/api.js";
 
 function SignUp({ isModal = false, onClose }) {
   const navigate = useNavigate();
-
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleClose = () => {
@@ -100,63 +93,6 @@ function SignUp({ isModal = false, onClose }) {
     }
   };
 
-  const handleSignUpSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage("");
-
-    const cleanedIdentifier = identifier.trim();
-
-    if (!cleanedIdentifier && !password) {
-      setErrorMessage("User name and password not given");
-      return;
-    }
-
-    if (!cleanedIdentifier) {
-      setErrorMessage("User name not given");
-      return;
-    }
-
-    if (!password) {
-      setErrorMessage("Password not given");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Check if identifier is email or mobile or username
-      const isEmail = cleanedIdentifier.includes("@");
-      const isMobile = /^\+?[0-9]{8,15}$/.test(cleanedIdentifier);
-
-      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: isEmail ? cleanedIdentifier.split("@")[0] : cleanedIdentifier,
-          email: isEmail ? cleanedIdentifier : undefined,
-          mobile_number: isMobile ? cleanedIdentifier : undefined,
-          password: password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem("access_token", data.access_token);
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("user", JSON.stringify(data.user || { username: cleanedIdentifier }));
-        navigate("/login-success", { replace: true });
-      } else {
-        setErrorMessage(formatErrorMessage(data?.detail, "Signup failed. Please try again."));
-      }
-    } catch (err) {
-      console.error(err);
-      setErrorMessage("Unable to connect to server. Please ensure backend is running.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const cardContent = (
     <div className="signup-card" onClick={(e) => e.stopPropagation()}>
       <button
@@ -221,95 +157,9 @@ function SignUp({ isModal = false, onClose }) {
         </div>
       )}
 
-      {/* Form submit for direct SignUp */}
-      <form className="signup-form" onSubmit={handleSignUpSubmit} autoComplete="off">
-        {/* Prevent Browser Autofill */}
-        <input type="text" style={{ display: "none" }} aria-hidden="true" tabIndex={-1} />
-        <input type="password" style={{ display: "none" }} aria-hidden="true" tabIndex={-1} />
-
-        {/* Username Input */}
-        <div className="input-group">
-          <label htmlFor="gp_signup_username_input" className="input-label">
-            User Name <span className="required-star">*</span>
-          </label>
-          <input
-            id="gp_signup_username_input"
-            type="text"
-            name="gp_signup_username_input"
-            placeholder="Enter your user name or email"
-            className="signup-input"
-            value={identifier}
-            onChange={(e) => {
-              setIdentifier(e.target.value);
-              setErrorMessage("");
-            }}
-            maxLength={100}
-            tabIndex={1}
-            autoComplete="new-password"
-            aria-label="User Name"
-          />
-        </div>
-
-        {/* Password Input */}
-        <div className="input-group">
-          <label htmlFor="gp_signup_password_input" className="input-label">
-            Password <span className="required-star">*</span>
-          </label>
-          <div style={{ position: "relative", width: "100%" }}>
-            <input
-              id="gp_signup_password_input"
-              type={showPassword ? "text" : "password"}
-              name="gp_signup_password_input"
-              placeholder="Enter your password"
-              className="signup-input"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setErrorMessage("");
-              }}
-              maxLength={128}
-              tabIndex={2}
-              style={{ paddingRight: "44px" }}
-              autoComplete="new-password"
-              aria-label="Password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: "absolute",
-                right: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "transparent",
-                border: "none",
-                color: "#9ca3af",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-              }}
-              aria-label={showPassword ? "Hide Password" : "Show Password"}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="signup-submit-btn"
-          disabled={loading}
-          tabIndex={3}
-          style={{ marginTop: "14px" }}
-        >
-          {loading ? "Creating Account..." : "Create Account"}
-        </button>
-      </form>
-
       {/* Bottom */}
       <div className="login-text">
-        Already have an account? <Link to="/login" tabIndex={4}>Log in</Link>
+        Already have an account? <Link to="/login">Log in</Link>
       </div>
     </div>
   );
@@ -335,3 +185,4 @@ function SignUp({ isModal = false, onClose }) {
 }
 
 export default SignUp;
+
