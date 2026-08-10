@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -113,10 +113,6 @@ def send_real_sms_otp(mobile_number: str, otp_code: str):
 
     except Exception as e:
         print(f"[FAST2SMS EXCEPTION] Failed to send SMS: {e}")
-        return False
-
-    except Exception as e:
-        print(f"[FAST2SMS EXCEPTION] Failed to send SMS via Fast2SMS: {e}")
         return False
 
 
@@ -715,12 +711,16 @@ def login(
     if clean_digits:
         filters.append(User.mobile_number.like(f"%{clean_digits}"))
 
-    user = db.query(User).filter(or_(*filters)).first()
+    try:
+        user = db.query(User).filter(or_(*filters)).first()
+    except Exception as err:
+        print(f"[LOGIN DB ERROR]: {err}")
+        user = None
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username/email or password.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account not found. Please check your username/email or create a new account.",
         )
 
     # Verify password hash
@@ -1213,4 +1213,3 @@ def get_current_user_profile(
             detail="User profile not found in database.",
         )
     return UserResponse.model_validate(user)
-

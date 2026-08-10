@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 import background from "../../../assets/images/space-background.png";
+import { API_BASE_URL } from "../../../config/api.js";
 
 function ForgotPassword() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ function ForgotPassword() {
       setLoading(true);
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/forgot-password",
+        `${API_BASE_URL}/api/auth/forgot-password`,
         {
           method: "POST",
           headers: {
@@ -88,25 +89,34 @@ function ForgotPassword() {
       }}
     >
       <div className="forgot-card">
-        {/* TC-12: Back button to login */}
-        <button
-          type="button"
-          className="forgot-back"
-          onClick={() => navigate("/login")}
-          aria-label="Back to Login"
-        >
-          ← Back
-        </button>
+        {/* Header Slot */}
+        <div className="forgot-header">
+          <button
+            type="button"
+            className="back-btn"
+            onClick={() => navigate("/login")}
+            aria-label="Back to Login"
+          >
+            ← Back
+          </button>
+        </div>
 
-        <div className="forgot-icon" aria-hidden="true">↻</div>
+        {/* Circular Reset Icon */}
+        <div className="forgot-icon-circle">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.5 2v6h-6" />
+            <path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+        </div>
 
-        {/* TC-01: Title */}
+        {/* Title */}
         <h1 className="forgot-title">Forgot Password?</h1>
 
-        {/* TC-02: Description text */}
+        {/* Description text */}
         <p className="forgot-subtitle">
-          No worries! Enter your registered Gmail address or mobile number and
-          we'll send you a verification code to reset your password.
+          No worries! Enter your registered G mail address or
+          Mobile number and we'll send you a verification code to
+          reset your password.
         </p>
 
         {errorMessage && (

@@ -1,14 +1,15 @@
 import "./SignUp.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 
 import logo from "../../../assets/images/logo.png";
 import background from "../../../assets/images/space-background.png";
+import { API_BASE_URL } from "../../../config/api.js";
 
 function SignUp({ isModal = false, onClose }) {
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleClose = () => {
     if (onClose) {
@@ -25,57 +26,87 @@ function SignUp({ isModal = false, onClose }) {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => window.returnEventListener ? window.returnEventListener("keydown", handleKeyDown) : () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const googleSignup = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
-        const response = await axios.post(
-          "http://127.0.0.1:8000/api/auth/google-login",
+        setErrorMessage("");
+        const response = await fetch(
+          `${API_BASE_URL}/api/auth/google-login`,
           {
-            access_token: tokenResponse.access_token,
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              access_token: tokenResponse.access_token,
+            }),
           }
         );
 
-        localStorage.setItem("access_token", response.data.access_token);
-        localStorage.setItem("token", response.data.access_token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+        const data = await response.json();
 
-        if (response.data.is_new_user) {
-          navigate("/complete-profile", {
-            state: {
-              email: response.data.user.email,
-              isGoogle: true,
-            },
-          });
+        if (response.ok) {
+          localStorage.setItem("access_token", data.access_token);
+          localStorage.setItem("token", data.access_token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+
+          if (data.is_new_user) {
+            navigate("/complete-profile", {
+              state: {
+                email: data.user.email,
+                isGoogle: true,
+              },
+            });
+          } else {
+            setErrorMessage("Account already exists with this Google email. Redirecting to Login...");
+            setTimeout(() => {
+              navigate("/login", {
+                state: {
+                  message: "Account already exists with this Google email. Please log in.",
+                },
+              });
+            }, 1500);
+          }
         } else {
-          navigate("/login-success");
+          setErrorMessage(data?.detail || "Google Signup Failed");
         }
       } catch (error) {
-        console.error("AXIOS ERROR:", error);
-        localStorage.setItem("user", JSON.stringify({ username: "Google User" }));
-        navigate("/login-success");
+        console.error(error);
+        setErrorMessage("Google Signup Failed. Please try again.");
       }
     },
     onError: () => {
-      alert("Google Login Failed");
+      setErrorMessage("Google Signup Failed. Please try again.");
     },
   });
 
+  const handleGoogleClick = () => {
+    try {
+      if (typeof googleSignup === "function") {
+        googleSignup();
+      }
+    } catch (err) {
+      console.error("Google OAuth error:", err);
+    }
+  };
+
   const cardContent = (
     <div className="signup-card" onClick={(e) => e.stopPropagation()}>
-      {/* Header */}
+      <button
+        className="close-btn"
+        type="button"
+        onClick={handleClose}
+        aria-label="Close modal"
+      >
+        &times;
+      </button>
+
+      {/* Header Logo */}
       <div className="signup-header">
         <img src={logo} alt="GlobalPulse" className="signup-logo" />
-        <button
-          className="close-btn"
-          type="button"
-          onClick={handleClose}
-          aria-label="Close modal"
-        >
-          &times;
-        </button>
       </div>
 
       {/* Title */}
@@ -85,7 +116,7 @@ function SignUp({ isModal = false, onClose }) {
         Start your journey to learn global markets and trading.
       </p>
 
-      {/* Continue with Mobile */}
+      {/* Mobile Sign Up */}
       <button
         className="mobile-btn"
         type="button"
@@ -95,14 +126,14 @@ function SignUp({ isModal = false, onClose }) {
           })
         }
       >
-        Continue with Mobile Number
+        Continue with <strong>Mobile Number</strong>
       </button>
 
-      {/* Continue with Google */}
+      {/* Google Sign Up */}
       <button
         className="google-btn"
         type="button"
-        onClick={() => googleSignup()}
+        onClick={handleGoogleClick}
       >
         <svg className="google-icon" width="20" height="20" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -120,9 +151,15 @@ function SignUp({ isModal = false, onClose }) {
         <span className="line"></span>
       </div>
 
+      {errorMessage && (
+        <div style={{ color: "#f87171", fontSize: "13px", marginBottom: "12px", textAlign: "center", fontWeight: "500" }}>
+          {errorMessage}
+        </div>
+      )}
+
       {/* Bottom */}
       <div className="login-text">
-        Already have an account? <Link to="/login">Log In</Link>
+        Already have an account? <Link to="/login">Log in</Link>
       </div>
     </div>
   );
@@ -148,3 +185,4 @@ function SignUp({ isModal = false, onClose }) {
 }
 
 export default SignUp;
+

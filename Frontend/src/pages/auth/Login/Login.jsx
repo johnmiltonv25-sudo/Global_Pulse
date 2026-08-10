@@ -1,26 +1,29 @@
 import "./Login.css";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Eye, EyeOff } from "lucide-react";
 
 import logo from "../../../assets/images/logo.png";
 import background from "../../../assets/images/space-background.png";
+import { formatErrorMessage } from "../../../utils/formatError.js";
+import { API_BASE_URL } from "../../../config/api.js";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState(location.state?.message || "");
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/api/auth/google-login",
+          `${API_BASE_URL}/api/auth/google-login`,
           {
             method: "POST",
             headers: {
@@ -40,13 +43,11 @@ function Login() {
           localStorage.setItem("user", JSON.stringify(data.user));
           navigate("/login-success", { replace: true });
         } else {
-          localStorage.setItem("user", JSON.stringify({ username: "Google User" }));
-          navigate("/login-success", { replace: true });
+          setErrorMessage(data?.detail || "Google Login Failed");
         }
       } catch (error) {
         console.error(error);
-        localStorage.setItem("user", JSON.stringify({ username: "Google User" }));
-        navigate("/login-success", { replace: true });
+        setErrorMessage("Google Login Failed. Please try again.");
       }
     },
     onError: () => {
@@ -54,63 +55,66 @@ function Login() {
     },
   });
 
+  const handleGoogleClick = () => {
+    try {
+      if (typeof googleLogin === "function") {
+        googleLogin();
+      }
+    } catch (err) {
+      console.error("Google OAuth error:", err);
+    }
+  };
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
 
-    // TC-12: Trim leading & trailing spaces from username/email
     const cleanedIdentifier = identifier.trim();
 
-    // TC-16, TC-17, TC-18: Validation errors for empty fields
+    // Validation errors for empty fields as requested
     if (!cleanedIdentifier && !password) {
-      setErrorMessage("Username and Password are required.");
+      setErrorMessage("User name and password not given");
       return;
     }
 
     if (!cleanedIdentifier) {
-      setErrorMessage("Username or Email is required.");
+      setErrorMessage("User name not given");
       return;
     }
 
     if (!password) {
-      setErrorMessage("Password is required.");
+      setErrorMessage("Password not given");
       return;
     }
 
     try {
       setLoading(true);
-      const response = await fetch("http://127.0.0.1:8000/api/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: cleanedIdentifier,
-          password: password, // TC-13: Password case-sensitivity preserved
+          password: password,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // TC-08, TC-29: Store session & navigate to login success
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("token", data.access_token);
         localStorage.setItem("user", JSON.stringify(data.user || { username: cleanedIdentifier }));
         navigate("/login-success", { replace: true });
       } else {
-        // TC-09, TC-10: Invalid Username or Password error message
-        setErrorMessage(data.detail || "Invalid Username or Password.");
+        setErrorMessage(formatErrorMessage(data?.detail, "Invalid User name or Password."));
       }
     } catch (err) {
       console.error(err);
-      localStorage.setItem("user", JSON.stringify({ username: cleanedIdentifier || "Trader" }));
-      navigate("/login-success", { replace: true });
+      setErrorMessage("Unable to connect to server. Please ensure backend is running.");
     } finally {
       setLoading(false);
     }
   };
-
-  // TC-19, TC-20: Button disabled when empty, active when filled
-  const isButtonEnabled = identifier.trim().length > 0 && password.length > 0 && !loading;
 
   return (
     <div
@@ -120,21 +124,22 @@ function Login() {
       }}
     >
       <div className="login-card">
+        <button
+          className="close-btn"
+          type="button"
+          onClick={() => navigate("/")}
+          aria-label="Close"
+        >
+          &times;
+        </button>
+
         {/* Header */}
         <div className="login-header">
           <img src={logo} alt="GlobalPulse" className="login-logo" />
-          <button
-            className="close-btn"
-            type="button"
-            onClick={() => navigate("/")}
-            aria-label="Close"
-          >
-            &times;
-          </button>
         </div>
 
         {/* Title */}
-        <h1 className="login-title">Welcome Back</h1>
+        <h1 className="login-title">Welcome Back!</h1>
         <p className="login-subtitle">
           Log in to continue your trading journey.
         </p>
@@ -149,14 +154,14 @@ function Login() {
             })
           }
         >
-          Continue with Mobile Number
+          Continue with <strong>Mobile Number</strong>
         </button>
 
         {/* Google Login */}
         <button
           type="button"
           className="google-btn"
-          onClick={() => googleLogin()}
+          onClick={handleGoogleClick}
         >
           <svg className="google-icon" width="20" height="20" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -180,19 +185,22 @@ function Login() {
           </div>
         )}
 
-        {/* TC-22: Form submit on Enter key */}
+        {/* Form submit on Enter key or button click */}
         <form className="login-form" onSubmit={handleLoginSubmit} autoComplete="off">
           {/* Prevent Browser Autofill */}
           <input type="text" style={{ display: "none" }} aria-hidden="true" tabIndex={-1} />
           <input type="password" style={{ display: "none" }} aria-hidden="true" tabIndex={-1} />
 
-          {/* TC-05, TC-14, TC-21: Username Input */}
+          {/* Username Input with Mandatory * Label */}
           <div className="input-group">
+            <label htmlFor="gp_username_input" className="input-label">
+              User Name <span className="required-star">*</span>
+            </label>
             <input
               id="gp_username_input"
               type="text"
               name="gp_username_input"
-              placeholder="User Name"
+              placeholder="Enter your user name or email"
               className="login-input"
               value={identifier}
               onChange={(e) => {
@@ -206,69 +214,70 @@ function Login() {
             />
           </div>
 
-          {/* TC-06, TC-07, TC-15, TC-21: Password Input with Eye Toggle */}
-          <div className="input-group" style={{ position: "relative" }}>
-            <input
-              id="gp_password_input"
-              type={showPassword ? "text" : "password"}
-              name="gp_password_input"
-              placeholder="Password"
-              className="login-input"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setErrorMessage("");
-              }}
-              maxLength={128}
-              tabIndex={2}
-              style={{ paddingRight: "44px" }}
-              autoComplete="new-password"
-              aria-label="Password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: "absolute",
-                right: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "transparent",
-                border: "none",
-                color: "#9ca3af",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-              }}
-              aria-label={showPassword ? "Hide Password" : "Show Password"}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
+          {/* Password Input with Mandatory * Label */}
+          <div className="input-group">
+            <label htmlFor="gp_password_input" className="input-label">
+              Password <span className="required-star">*</span>
+            </label>
+            <div style={{ position: "relative", width: "100%" }}>
+              <input
+                id="gp_password_input"
+                type={showPassword ? "text" : "password"}
+                name="gp_password_input"
+                placeholder="Enter your password"
+                className="login-input"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrorMessage("");
+                }}
+                maxLength={128}
+                tabIndex={2}
+                style={{ paddingRight: "44px" }}
+                autoComplete="new-password"
+                aria-label="Password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: "absolute",
+                  right: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "transparent",
+                  border: "none",
+                  color: "#9ca3af",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                aria-label={showPassword ? "Hide Password" : "Show Password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
-          {/* TC-23: Forgot Password Link */}
+          {/* Forgot Password Link */}
           <div className="forgot-password">
             <Link to="/forgot-password" tabIndex={3}>Forgot Password?</Link>
           </div>
 
-          {/* TC-19, TC-20: Submit Button */}
+          {/* Submit Button */}
           <button
             type="submit"
             className="login-submit-btn"
-            disabled={!isButtonEnabled}
+            disabled={loading}
             tabIndex={4}
-            style={{
-              opacity: isButtonEnabled ? 1 : 0.5,
-              cursor: isButtonEnabled ? "pointer" : "not-allowed",
-            }}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
 
         {/* TC-02, TC-24: Create Account Link */}
         <div className="signup-text">
-          Already have an account? <Link to="/login">Log in</Link> | Don't have an account? <Link to="/signup" tabIndex={5}>Create Account</Link>
+          Don't have an account? <Link to="/signup" tabIndex={5}>Create Account</Link>
         </div>
       </div>
     </div>
