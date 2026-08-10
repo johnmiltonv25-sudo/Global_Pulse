@@ -22,9 +22,9 @@ class User(Base):
     __tablename__ = "users"
 
     user_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    username = Column(String(100), unique=True, nullable=False)
-    email = Column(String(255), unique=True, nullable=False)
-    mobile_number = Column(String(20), unique=True)
+    username = Column(String(100), unique=True, index=True, nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    mobile_number = Column(String(20), unique=True, index=True)
     password_hash = Column(Text)
     firebase_uid = Column(String(128), unique=True, index=True, nullable=True)
     auth_provider = Column(String(20), default="LOCAL")

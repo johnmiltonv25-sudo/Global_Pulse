@@ -9,6 +9,8 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
+import bcrypt
+
 password_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
@@ -19,19 +21,27 @@ password_context = CryptContext(
 # Password Hashing
 # ------------------------------------
 
-def hash_password(password: str):
-    return password_context.hash(password)
+def hash_password(password: str) -> str:
+    pwd_bytes = password.encode("utf-8")[:72]
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
 
 # ------------------------------------
 # Password Verification
 # ------------------------------------
 
-def verify_password(password: str, hashed_password: str):
-    return password_context.verify(
-        password,
-        hashed_password
-    )
+def verify_password(password: str, hashed_password: str) -> bool:
+    if not password or not hashed_password:
+        return False
+    try:
+        pwd_bytes = password.encode("utf-8")[:72]
+        return bcrypt.checkpw(pwd_bytes, hashed_password.encode("utf-8"))
+    except Exception:
+        try:
+            return password_context.verify(password, hashed_password)
+        except Exception:
+            return False
 
 
 # ------------------------------------

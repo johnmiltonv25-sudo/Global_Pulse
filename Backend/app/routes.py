@@ -43,6 +43,23 @@ router = APIRouter(
     tags=["Authentication"],
 )
 
+def serialize_user_entity(user: User) -> dict:
+    """
+    Returns a unified mapping dictionary of a User entity including username, email, and mobile_number.
+    """
+    if not user:
+        return {}
+    return {
+        "user_id": user.user_id,
+        "username": user.username,
+        "email": user.email,
+        "mobile_number": user.mobile_number,
+        "auth_provider": user.auth_provider,
+        "is_mobile_verified": bool(user.is_mobile_verified),
+        "is_email_verified": bool(user.is_email_verified),
+        "account_status": user.account_status,
+    }
+
 def send_real_sms_otp(mobile_number: str, otp_code: str):
     """
     Sends real SMS OTP using Fast2SMS API if FAST2SMS_API_KEY is configured in .env.
@@ -445,12 +462,7 @@ def verify_otp(
     return {
         "message": "Login Successful",
         "access_token": access_token,
-        "user": {
-            "user_id": user.user_id,
-            "username": user.username,
-            "email": user.email,
-            "mobile_number": user.mobile_number,
-        },
+        "user": serialize_user_entity(user),
     }
 
 
@@ -554,12 +566,7 @@ def signup(
     return {
         "message": "Account Created Successfully",
         "access_token": access_token,
-        "user": {
-            "user_id": new_user.user_id,
-            "username": new_user.username,
-            "email": new_user.email,
-            "mobile_number": new_user.mobile_number,
-        },
+        "user": serialize_user_entity(new_user),
     }
 
 
@@ -660,12 +667,7 @@ def complete_profile(
     return {
         "message": "Profile Completed Successfully",
         "access_token": access_token,
-        "user": {
-            "user_id": user.user_id,
-            "username": user.username,
-            "email": user.email,
-            "mobile_number": user.mobile_number,
-        },
+        "user": serialize_user_entity(user),
     }
 
 
@@ -731,11 +733,7 @@ def google_signup_complete(
     return {
         "message": "Google Account Completed Successfully",
         "access_token": access_token,
-        "user": {
-            "user_id": user.user_id,
-            "username": user.username,
-            "email": user.email,
-        },
+        "user": serialize_user_entity(user),
     }
 
 
@@ -816,12 +814,7 @@ def login(
     return {
         "message": "Login Successful",
         "access_token": access_token,
-        "user": {
-            "user_id": user.user_id,
-            "username": user.username,
-            "email": user.email,
-            "mobile_number": user.mobile_number,
-        },
+        "user": serialize_user_entity(user),
     }
 
 
@@ -921,12 +914,7 @@ def google_login(
             "message": "Google Login Successful",
             "access_token": access_token,
             "is_new_user": is_new,
-            "user": {
-                "user_id": user.user_id,
-                "username": user.username,
-                "email": user.email,
-                "mobile_number": user.mobile_number,
-            },
+            "user": serialize_user_entity(user),
         }
 
     except Exception as e:
