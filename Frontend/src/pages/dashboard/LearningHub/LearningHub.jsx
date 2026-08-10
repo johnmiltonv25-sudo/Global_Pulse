@@ -1,58 +1,46 @@
-/**
- * ============================================================================
- * LEARNING HUB COMPONENT
- * ============================================================================
- * High-density financial learning hub page with 4x4 matrix video grid,
- * interactive YouTube player modal, and dynamic active module tracking.
- */
+import React, { useState, useMemo } from "react";
+import { GraduationCap, BookOpen, History, Search } from "lucide-react";
 
-import React, { useState } from "react";
+import learningData from "./learningData.js";
+import LearningCard from "./components/LearningCard.jsx";
+import ActiveModuleCard from "./components/ActiveModuleCard.jsx";
+import LearningModal from "./components/LearningModal.jsx";
 import "./LearningHub.css";
 
-// Learning Data & Components
-import learningData from "./learningData";
-import LearningCard from "./components/LearningCard";
-
+/**
+ * LearningHub Component
+ * Configured with 3-card single row layout for Active Modules bar.
+ */
 export default function LearningHub() {
-  // ==========================================================================
-  // STATE MANAGEMENT
-  // ==========================================================================
-
-  /**
-   * Track recently viewed active modules (persisted in localStorage)
-   * Starts empty [] until user interacts with a video card.
-   */
+  // Recently watched learning modules stored in localStorage (max 3 for 1 clean row)
   const [activeModules, setActiveModules] = useState(() => {
     try {
-      const saved = localStorage.getItem("recent_learning_modules");
-      return saved ? JSON.parse(saved) : [];
+      const saved = localStorage.getItem("recent_learning_modules_v3");
+      if (saved) return JSON.parse(saved);
+      // Default to top 3 seeded courses for clean initial UX
+      return learningData.slice(0, 3);
     } catch (e) {
-      return [];
+      return learningData.slice(0, 3);
     }
   });
 
-  // Selected course object for modal video player
+  // Currently open course for embedded YouTube video modal
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  // Active category filter state ('All', 'Beginner', 'Intermediate', 'Advanced')
+  // Active level filter ('All', 'Beginner', 'Intermediate', 'Advanced')
   const [activeFilter, setActiveFilter] = useState("All");
 
-  // ==========================================================================
-  // HANDLER FUNCTIONS
-  // ==========================================================================
+  // Search query filter
+  const [searchQuery, setSearchQuery] = useState("");
 
-  /**
-   * Opens in-app YouTube modal player and pushes course to Active Modules bar
-   * @param {Object} course - Selected course object
-   */
   const openCourse = (course) => {
     setSelectedCourse(course);
 
     setActiveModules((prev) => {
-      const filtered = prev.filter((item) => item.id !== course.id);
-      const updated = [course, ...filtered].slice(0, 4);
+      const filtered = prev.filter((item) => String(item.id) !== String(course.id));
+      const updated = [course, ...filtered].slice(0, 3); // Max 3 cards for 1 perfect row!
       try {
-        localStorage.setItem("recent_learning_modules", JSON.stringify(updated));
+        localStorage.setItem("recent_learning_modules_v3", JSON.stringify(updated));
       } catch (e) {
         console.error("LocalStorage write error:", e);
       }
@@ -60,165 +48,124 @@ export default function LearningHub() {
     });
   };
 
-  /**
-   * Closes the active YouTube video modal
-   */
   const closeModal = () => {
     setSelectedCourse(null);
   };
 
-  // ==========================================================================
-  // RENDER UI
-  // ==========================================================================
+  // Filtered courses by active level and search query
+  const filteredCourses = useMemo(() => {
+    return learningData.filter((c) => {
+      const matchesLevel = activeFilter === "All" || c.level === activeFilter;
+      const matchesSearch =
+        !searchQuery ||
+        c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesLevel && matchesSearch;
+    });
+  }, [activeFilter, searchQuery]);
 
   return (
-    <div className="learning-page">
-      {/* ----------------------------------------------------------------------
-          1. IN-APP YOUTUBE VIDEO PLAYER MODAL
-      ---------------------------------------------------------------------- */}
-      {selectedCourse && (
-        <div className="learning-modal-backdrop" onClick={closeModal}>
-          <div
-            className="learning-modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="learning-modal-header">
-              <h3>
-                <span className={`learning-level ${selectedCourse.level.toLowerCase()}`}>
-                  {selectedCourse.level}
-                </span>
-                {selectedCourse.title}
-              </h3>
-              <button
-                className="learning-modal-close"
-                onClick={closeModal}
-                aria-label="Close modal"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Embedded YouTube Video Container */}
-            <div className="learning-video-container">
-              <iframe
-                src={selectedCourse.embedUrl}
-                title={selectedCourse.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="learning-modal-footer">
-              <span className="duration-text">Duration: {selectedCourse.duration}</span>
-              <a
-                href={selectedCourse.video}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-yt-external"
-              >
-                Watch on YouTube ↗
-              </a>
-            </div>
+    <div className="goal-dash card-appear et-page lh-page">
+      {/* ------------------- PAGE HEADER ------------------- */}
+      <div className="goal-hero__head" style={{ marginBottom: "8px" }}>
+        <div className="goal-hero__identity">
+          <div className="goal-hero__icon-badge">
+            <GraduationCap size={22} className="goal-hero__icon" />
           </div>
-        </div>
-      )}
-
-      {/* ----------------------------------------------------------------------
-          2. MAIN CONTENT LAYOUT
-      ---------------------------------------------------------------------- */}
-      <div className="learning-hub">
-        {/* SECTION A: HERO HEADER */}
-        <div className="learning-hero fade-up">
           <div>
-            <h1>Learning Hub</h1>
-            <p>
-              Master global economics through high-density intelligence modules
-              designed for rapid financial mastery and trading excellence.
+            <div className="goal-hero__title-row">
+              <h1 className="goal-hero__name">Learning Hub</h1>
+            </div>
+            <p className="goal-hero__note">
+              Master global economics, market strategies, and personal finance through high-density video modules
             </p>
           </div>
         </div>
 
-        {/* SECTION B: CATEGORY FILTERS */}
-        <div className="learning-filters">
-          {["All", "Beginner", "Intermediate", "Advanced"].map((filter) => (
-            <button
-              key={filter}
-              className={activeFilter === filter ? "is-active" : ""}
-              onClick={() => {
-                setActiveFilter(filter);
-                if (filter !== "All") {
-                  document.getElementById(filter)?.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
+        {/* Action Controls: Search & Level Filters */}
+        <div className="goal-hero__actions" style={{ flexWrap: "wrap", gap: "10px" }}>
+          {/* Search Bar */}
+          <div className="drawer-panel__input-wrapper" style={{ width: "210px", height: "36px" }}>
+            <Search size={14} className="drawer-panel__icon" />
+            <input
+              type="text"
+              className="drawer-panel__input"
+              style={{ fontSize: "12px", height: "36px" }}
+              placeholder="Search modules..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-        {/* SECTION C: ACTIVE MODULES (Recent Activity Bar) */}
-        <div className="section-title">
-          <h2>Active Modules</h2>
-          <p>Your recently watched learning video modules.</p>
-        </div>
-
-        <div className="active-modules fade-up delay-1">
-          {activeModules.length === 0 ? (
-            <div className="no-active">
-              <h3>No Active Modules Yet</h3>
-              <p>Start learning by clicking any video course below!</p>
-            </div>
-          ) : (
-            activeModules.map((course) => (
-              <div
-                className="active-card"
-                key={course.id}
-                onClick={() => openCourse(course)}
+          {/* Level Filter Chips */}
+          <div style={{ display: "flex", gap: "6px" }}>
+            {["All", "Beginner", "Intermediate", "Advanced"].map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                className={`filter-chip ${activeFilter === filter ? "is-active" : ""}`}
+                style={{ padding: "6px 12px", fontSize: "12px", height: "36px" }}
+                onClick={() => setActiveFilter(filter)}
               >
-                <img src={course.image} alt={course.title} />
-
-                <div className="active-content">
-                  <span className={`learning-level ${course.level.toLowerCase()}`}>
-                    {course.level}
-                  </span>
-                  <h3>{course.title}</h3>
-                  <div className="active-footer">
-                    <button
-                      className="learning-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openCourse(course);
-                      }}
-                    >
-                      Resume Module →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* SECTION D: EXPLORE LEARNING (4x4 Matrix Grid) */}
-        <div className="section-title">
-          <h2>Explore Learning</h2>
-          <p>Select any module below to launch the video frame.</p>
-        </div>
-
-        <div className="learning-grid fade-up delay-2">
-          {learningData
-            .filter((course) => activeFilter === "All" || course.level === activeFilter)
-            .map((course) => (
-              <LearningCard
-                key={course.id}
-                course={course}
-                openCourse={openCourse}
-              />
+                {filter}
+              </button>
             ))}
+          </div>
         </div>
       </div>
+
+      {/* ------------------- SECTION 1: ACTIVE MODULES (Exact 3-Card Single Row Bar) ------------------- */}
+      <div className="goal-panel">
+        <div className="goal-panel__head">
+          <div className="goal-panel__head-left">
+            <History size={16} className="goal-panel__head-icon" />
+            <h3 className="goal-panel__title">Active Modules</h3>
+            <span className="history-count-badge">{activeModules.length} Modules</span>
+          </div>
+        </div>
+
+        {activeModules.length > 0 ? (
+          <div className="lh-active-list">
+            {activeModules.map((course) => (
+              <ActiveModuleCard key={`active-${course.id}`} course={course} openCourse={openCourse} />
+            ))}
+          </div>
+        ) : (
+          <div className="history-empty" style={{ padding: "16px", textAlign: "center" }}>
+            <p style={{ margin: 0, fontSize: "13px", color: "var(--text-2, #aeb6c7)" }}>
+              No active modules yet. Click any video course below to launch your learning session!
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ------------------- SECTION 2: EXPLORE LEARNING (4x4 Matrix Grid) ------------------- */}
+      <div className="goal-panel">
+        <div className="goal-panel__head">
+          <div className="goal-panel__head-left">
+            <BookOpen size={16} className="goal-panel__head-icon" />
+            <h3 className="goal-panel__title">Explore Learning</h3>
+            <span className="history-count-badge">{filteredCourses.length} Courses</span>
+          </div>
+        </div>
+
+        {filteredCourses.length > 0 ? (
+          <div className="lh-grid">
+            {filteredCourses.map((course) => (
+              <LearningCard key={course.id} course={course} openCourse={openCourse} />
+            ))}
+          </div>
+        ) : (
+          <div className="history-empty" style={{ padding: "28px", textAlign: "center" }}>
+            <p style={{ margin: 0, fontSize: "13px", color: "var(--text-2, #aeb6c7)" }}>
+              No learning modules found matching "{searchQuery}".
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ------------------- PORTALED VIDEO MODAL ------------------- */}
+      <LearningModal course={selectedCourse} onClose={closeModal} />
     </div>
   );
 }

@@ -1,162 +1,289 @@
-import { useEffect, useState } from "react"
-import { Plus, Pencil, IndianRupee, Calendar, Banknote, Shapes, FileText, CheckCircle2, ChevronDown } from "lucide-react"
-
-import Modal from "./Modal.jsx"
-import { CATEGORIES, PAYMENT_METHODS } from "./data.js"
-
-const BLANK = { amount: "", category: "food", date: "", method: "Cash", notes: "" }
-
+import React, { useEffect, useState } from "react";
+import {
+  X,
+  IndianRupee,
+  Calendar,
+  Banknote,
+  Shapes,
+  FileText,
+} from "lucide-react";
+ 
+import Modal from "./Modal.jsx";
+import { CATEGORIES, PAYMENT_METHODS } from "./data.js";
+ 
+const BLANK = { amount: "", category: "food", date: "", source: "Individual", method: "Salary", notes: "" };
+ 
 /**
- * One dialog that drives Add Income, Add Expense and Edit Transaction.
- * `mode` = "add" | "edit"; `type` = "income" | "expense".
+ * Add Income / Add Expense / Edit Transaction Modal.
+ * Defaults transaction date to the currently active calendar date (e.g. selected month date).
  */
-export default function TransactionModal({ open, mode, type, initial, onClose, onSave }) {
-  const isEdit = mode === "edit"
-  const isExpense = type === "expense"
-  const [form, setForm] = useState(BLANK)
-  const [error, setError] = useState("")
-
+export default function TransactionModal({ open, mode, type, initial, selectedDate, onClose, onSave }) {
+  const isEdit = mode === "edit";
+  const isExpense = type === "expense";
+  const isIncome = type === "income" || (!isExpense && initial?.type === "income");
+ 
+  const [form, setForm] = useState(BLANK);
+  const [error, setError] = useState("");
+ 
   useEffect(() => {
-    if (!open) return
-    const today = new Date().toISOString().slice(0, 10)
-    setForm(
-      initial
-        ? {
-            amount: String(initial.amount ?? ""),
-            category: initial.category ?? "food",
-            date: initial.date ?? today,
-            method: initial.method ?? "Cash",
-            notes: initial.notes ?? "",
-          }
-        : { ...BLANK, date: today },
-    )
-    setError("")
-  }, [open, initial])
-
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
-
+    if (!open) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const defaultDate = selectedDate || today;
+ 
+    if (initial) {
+      const initSource = initial.source || (initial.method === "Salary" ? "Individual" : "Business");
+      const initMethod = initSource === "Individual" ? "Salary" : (initial.method && initial.method !== "Salary" ? initial.method : "Cash");
+      setForm({
+        amount: String(initial.amount ?? ""),
+        category: initial.category ?? "food",
+        date: initial.date ?? defaultDate,
+        source: initSource,
+        method: initMethod,
+        notes: initial.notes ?? "",
+      });
+    } else {
+      setForm({
+        ...BLANK,
+        date: defaultDate,
+        source: isIncome ? "Individual" : "Business",
+        method: isIncome ? "Salary" : "Cash",
+      });
+    }
+    setError("");
+  }, [open, initial, isIncome, selectedDate]);
+ 
+  const handleSourceChange = (newSource) => {
+    if (newSource === "Individual") {
+      setForm((f) => ({ ...f, source: "Individual", method: "Salary" }));
+    } else {
+      setForm((f) => ({ ...f, source: "Business", method: f.method === "Salary" ? "Cash" : f.method }));
+    }
+  };
+ 
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+ 
   const submit = (e) => {
-    e.preventDefault()
-    const amount = Number(form.amount)
+    e.preventDefault();
+    const amount = Number(form.amount);
     if (!form.amount || Number.isNaN(amount) || amount <= 0) {
-      setError("Enter a valid amount greater than 0.")
-      return
+      setError("Enter a valid amount greater than 0.");
+      return;
     }
     if (!form.date) {
-      setError("Please choose a date.")
-      return
+      setError("Please choose a date.");
+      return;
     }
     onSave({
       amount,
       category: isExpense ? form.category : null,
       date: form.date,
-      method: form.method,
+      source: isIncome ? form.source : null,
+      method: isIncome && form.source === "Individual" ? "Salary" : form.method,
       notes: form.notes.trim(),
-    })
-  }
-
-  const title = isEdit ? "Edit Transaction" : isExpense ? "Add Expense" : "Add Income"
-  const cta = isEdit ? "Confirm Edit" : isExpense ? "Save Expense" : "Save Income"
-  const TitleIcon = isEdit ? Pencil : Plus
-
+    });
+  };
+ 
+  const title = isEdit ? "Edit Transaction" : isExpense ? "Add Expense" : "Add Income";
+  const cta = isEdit ? "Update Transaction" : isExpense ? "Add Expense" : "Add Income";
+ 
   return (
-    <Modal open={open} onClose={onClose} labelledBy="et-tx-title">
-      <div className="et-modal__head">
-        <span className="et-modal__badge">
-          <TitleIcon size={18} />
-        </span>
-        <h2 id="et-tx-title" className="et-modal__title">
-          {title}
-        </h2>
+    <Modal open={open} onClose={onClose} labelledBy="et-tx-title" maxWidth="480px">
+      <div className="drawer-panel__head">
+        <div className="drawer-panel__head-text">
+          <h2 id="et-tx-title" className="drawer-panel__title">
+            {title}
+          </h2>
+        </div>
+        <button
+          type="button"
+          className="drawer-panel__close-btn"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          <X size={18} />
+        </button>
       </div>
-
-      <form className="et-modal__body" onSubmit={submit}>
-        <label className="et-field">
-          <span className="et-field__label">Amount</span>
-          <span className="et-input-wrap">
-            <IndianRupee size={16} className="et-input-icon" />
+ 
+      <form className="drawer-panel__form" onSubmit={submit} noValidate>
+        {/* AMOUNT */}
+        <div className="drawer-panel__field">
+          <label className="drawer-panel__label" htmlFor="tx-amount">
+            Amount <span className="goal-creation__req">*</span>
+          </label>
+          <div className="drawer-panel__input-wrapper">
+            <IndianRupee size={16} className="drawer-panel__icon" />
             <input
-              className="et-input"
+              id="tx-amount"
               type="number"
-              min="0"
               step="0.01"
+              min="0"
               inputMode="decimal"
-              placeholder="0.00"
+              className={`drawer-panel__input ${error && !form.amount ? "has-error" : ""}`}
+              placeholder="Enter amount e.g. ₹1,500"
               value={form.amount}
               onChange={set("amount")}
               autoFocus
+              required
             />
-          </span>
-        </label>
-
+          </div>
+        </div>
+ 
+        {/* CATEGORY (for Expenses) */}
         {isExpense && (
-          <label className="et-field">
-            <span className="et-field__label">Category</span>
-            <span className="et-input-wrap">
-              <Shapes size={16} className="et-input-icon" />
-              <select className="et-input et-select" value={form.category} onChange={set("category")}>
+          <div className="drawer-panel__field">
+            <label className="drawer-panel__label" htmlFor="tx-category">
+              Category <span className="goal-creation__req">*</span>
+            </label>
+            <div className="drawer-panel__input-wrapper">
+              <Shapes size={16} className="drawer-panel__icon" />
+              <select
+                id="tx-category"
+                className="drawer-panel__select"
+                value={form.category}
+                onChange={set("category")}
+              >
                 {CATEGORIES.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
                   </option>
                 ))}
               </select>
-              <ChevronDown size={16} className="et-input-caret" />
-            </span>
-          </label>
+            </div>
+          </div>
         )}
-
-        <label className="et-field">
-          <span className="et-field__label">Date</span>
-          <span className="et-input-wrap">
-            <Calendar size={16} className="et-input-icon" />
-            <input className="et-input" type="date" value={form.date} onChange={set("date")} />
-          </span>
-        </label>
-
-        <label className="et-field">
-          <span className="et-field__label">Payment Method</span>
-          <span className="et-input-wrap">
-            <Banknote size={16} className="et-input-icon" />
-            <select className="et-input et-select" value={form.method} onChange={set("method")}>
-              {PAYMENT_METHODS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={16} className="et-input-caret" />
-          </span>
-        </label>
-
-        <label className="et-field">
-          <span className="et-field__label">{isExpense ? "Detailed Notes" : "Notes (Optional)"}</span>
-          <span className="et-input-wrap">
-            <FileText size={16} className="et-input-icon et-input-icon--top" />
-            <textarea
-              className="et-input et-textarea"
-              rows={2}
-              placeholder="Add notes"
+ 
+        {/* SOURCE BAR (for Income: Individual vs Business) */}
+        {isIncome && (
+          <div className="drawer-panel__field">
+            <label className="drawer-panel__label">
+              Source <span className="goal-creation__req">*</span>
+            </label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <button
+                type="button"
+                className={`filter-chip ${form.source === "Individual" ? "is-active" : ""}`}
+                style={{
+                  height: "40px",
+                  borderRadius: "8px",
+                  justifyContent: "center",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                }}
+                onClick={() => handleSourceChange("Individual")}
+              >
+                Individual
+              </button>
+              <button
+                type="button"
+                className={`filter-chip ${form.source === "Business" ? "is-active" : ""}`}
+                style={{
+                  height: "40px",
+                  borderRadius: "8px",
+                  justifyContent: "center",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                }}
+                onClick={() => handleSourceChange("Business")}
+              >
+                Business
+              </button>
+            </div>
+          </div>
+        )}
+ 
+        {/* PAYMENT METHOD */}
+        <div className="drawer-panel__field">
+          <label className="drawer-panel__label" htmlFor="tx-method">
+            Payment Method <span className="goal-creation__req">*</span>
+          </label>
+          <div
+            className={`drawer-panel__input-wrapper ${
+              isIncome && form.source === "Individual" ? "drawer-panel__input-wrapper--disabled" : ""
+            }`}
+          >
+            <Banknote size={16} className="drawer-panel__icon" />
+            {isIncome && form.source === "Individual" ? (
+              <input
+                id="tx-method"
+                className="drawer-panel__input"
+                value="Salary"
+                disabled
+              />
+            ) : (
+              <select
+                id="tx-method"
+                className="drawer-panel__select"
+                value={form.method}
+                onChange={set("method")}
+              >
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+ 
+        {/* DATE */}
+        <div className="drawer-panel__field">
+          <label className="drawer-panel__label" htmlFor="tx-date">
+            Transaction Date <span className="goal-creation__req">*</span>
+          </label>
+          <div className="drawer-panel__input-wrapper">
+            <Calendar size={16} className="drawer-panel__icon drawer-panel__icon--white" />
+            <input
+              id="tx-date"
+              type="date"
+              className={`drawer-panel__input ${error && !form.date ? "has-error" : ""}`}
+              value={form.date}
+              onChange={set("date")}
+              required
+            />
+          </div>
+        </div>
+ 
+        {/* NOTE */}
+        <div className="drawer-panel__field">
+          <label className="drawer-panel__label" htmlFor="tx-notes">
+            Note <span className="goal-creation__opt">(Optional)</span>
+          </label>
+          <div className="drawer-panel__input-wrapper">
+            <FileText size={16} className="drawer-panel__icon" />
+            <input
+              id="tx-notes"
+              type="text"
+              className="drawer-panel__input"
+              placeholder="Add description or notes..."
               value={form.notes}
               onChange={set("notes")}
             />
-          </span>
-        </label>
-
-        {error && <p className="et-error">{error}</p>}
-
-        <div className="et-modal__foot">
-          {!isEdit && (
-            <button type="button" className="et-btn et-btn--muted" onClick={onClose}>
-              Cancel
-            </button>
-          )}
-          <button type="submit" className="et-btn et-btn--primary et-btn--grow">
-            {isEdit ? <Pencil size={18} /> : <CheckCircle2 size={18} />}
+          </div>
+        </div>
+ 
+        {error && <span className="drawer-panel__err-msg">{error}</span>}
+ 
+        {/* ACTION BUTTONS WITH CANCEL AND SUBMIT */}
+        <div
+          className="drawer-panel__actions"
+          style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}
+        >
+          <button
+            type="button"
+            className="drawer-panel__btn-cancel"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="drawer-panel__btn-submit"
+          >
             {cta}
           </button>
         </div>
       </form>
     </Modal>
-  )
+  );
 }
