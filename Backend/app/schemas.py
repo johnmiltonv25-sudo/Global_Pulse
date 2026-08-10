@@ -65,12 +65,12 @@ class FirebaseLoginRequest(BaseModel):
 class UserResponse(BaseModel):
     user_id: int
     username: str
-    email: EmailStr
-    mobile_number: Optional[str]
+    email: Optional[str] = None
+    mobile_number: Optional[str] = None
     auth_provider: str
-    is_mobile_verified: bool
-    is_email_verified: bool
-    account_status: str
+    is_mobile_verified: bool = False
+    is_email_verified: bool = False
+    account_status: str = "ACTIVE"
 
     model_config = {
         "from_attributes": True
@@ -91,8 +91,8 @@ class MessageResponse(BaseModel):
 
 class CompleteProfileRequest(BaseModel):
     username: str
-    email: EmailStr
-    mobile_number: str
+    email: Optional[str] = None
+    mobile_number: Optional[str] = None
     password: str
 
 # ==========================================================

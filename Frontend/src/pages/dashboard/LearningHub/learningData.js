@@ -2,17 +2,19 @@
  * ============================================================================
  * LEARNING HUB DATA SOURCE
  * ============================================================================
- * Contains 16 structured financial learning modules mapped with local assets
- * and high-definition embedded YouTube video URLs.
+ * Contains 16 structured financial learning modules mapped with content-specific
+ * local image assets and embedded YouTube video URLs.
  */
-
-// Local Learning Module Image Assets
-import learning1 from "./assets/learning1.png";
-import learning2 from "./assets/learning2.png";
-import learning3 from "./assets/learning3.png";
-import learning4 from "./assets/learning4.png";
-import learning5 from "./assets/learning5.png";
-import learning6 from "./assets/learning6.png";
+ 
+// Specific financial topic image assets
+import riskImg from "./assets/risk.png";
+import recessionImg from "./assets/recession.png";
+import inflationImg from "./assets/inflation.png";
+import stockMarketImg from "./assets/stock-market.png";
+import gdpImg from "./assets/gdp.png";
+import optionsImg from "./assets/options.png";
+ 
+// Numerical learning asset fallbacks
 import learning7 from "./assets/learning7.png";
 import learning8 from "./assets/learning8.png";
 import learning9 from "./assets/learning9.png";
@@ -22,7 +24,7 @@ import learning12 from "./assets/learning12.png";
 import learning13 from "./assets/learning13.png";
 import learning14 from "./assets/learning14.png";
 import learning15 from "./assets/learning15.png";
-
+ 
 /**
  * Array of 16 learning course objects for the 4x4 matrix grid.
  */
@@ -37,7 +39,7 @@ const learningData = [
     tag: "HEDGES · CAPITAL",
     duration: "55 min",
     category: "Intermediate",
-    image: learning1,
+    image: riskImg,
     videoId: "qN0-ltRAcV4",
     video: "https://youtu.be/qN0-ltRAcV4?si=zeYOrYsMFUtbnTWB",
     embedUrl: "https://www.youtube.com/embed/qN0-ltRAcV4?autoplay=1",
@@ -50,7 +52,7 @@ const learningData = [
     tag: "CASE STUDY",
     duration: "1.5 hrs",
     category: "Advanced",
-    image: learning2,
+    image: recessionImg,
     videoId: "H9DngtHhDlI",
     video: "https://youtu.be/H9DngtHhDlI?si=9rsp4RPM4WgHemh5",
     embedUrl: "https://www.youtube.com/embed/H9DngtHhDlI?autoplay=1",
@@ -63,7 +65,7 @@ const learningData = [
     tag: "BEGINNER",
     duration: "12 min",
     category: "Beginner",
-    image: learning3,
+    image: inflationImg,
     videoId: "Fr8ua_1-9Zg",
     video: "https://youtu.be/Fr8ua_1-9Zg?si=W0gl6OJT0kJW_B6g",
     embedUrl: "https://www.youtube.com/embed/Fr8ua_1-9Zg?autoplay=1",
@@ -76,13 +78,13 @@ const learningData = [
     tag: "INTRO",
     duration: "25 min",
     category: "Beginner",
-    image: learning4,
+    image: stockMarketImg,
     videoId: "oAv_drK8VAo",
     video: "https://youtu.be/oAv_drK8VAo?si=2EsP940ZVv-bmqag",
     embedUrl: "https://www.youtube.com/embed/oAv_drK8VAo?autoplay=1",
     description: "Learn the fundamentals of stock exchanges, equity valuation, and trading."
   },
-
+ 
   // --------------------------------------------------------------------------
   // ROW 2: MACROECONOMICS & QUANTITATIVE CONCEPTS
   // --------------------------------------------------------------------------
@@ -93,7 +95,7 @@ const learningData = [
     tag: "CONCEPT",
     duration: "15 min",
     category: "Beginner",
-    image: learning5,
+    image: gdpImg,
     videoId: "2xXoiV1Whoo",
     video: "https://youtu.be/2xXoiV1Whoo?si=QrhsWs6gtRI1NKWS",
     embedUrl: "https://www.youtube.com/embed/2xXoiV1Whoo?autoplay=1",
@@ -106,7 +108,7 @@ const learningData = [
     tag: "EXPERT",
     duration: "45 min",
     category: "Intermediate",
-    image: learning6,
+    image: optionsImg,
     videoId: "Ca66fN3oP1U",
     video: "https://youtu.be/Ca66fN3oP1U?si=Q5QqZ0XgrJWc7xPN",
     embedUrl: "https://www.youtube.com/embed/Ca66fN3oP1U?autoplay=1",
@@ -138,7 +140,7 @@ const learningData = [
     embedUrl: "https://www.youtube.com/embed/9xzQIXnkVj4?autoplay=1",
     description: "Analyze interest rate decisions, central bank balance sheets, and monetary policy."
   },
-
+ 
   // --------------------------------------------------------------------------
   // ROW 3: DEFI, ASSETS & FOREX MARKETS
   // --------------------------------------------------------------------------
@@ -194,7 +196,7 @@ const learningData = [
     embedUrl: "https://www.youtube.com/embed/Fte-qredO_w?autoplay=1",
     description: "Crude oil, gold, agricultural futures, and supply chain dynamics."
   },
-
+ 
   // --------------------------------------------------------------------------
   // ROW 4: ADVANCED STRATEGIES & CHART ANALYSIS
   // --------------------------------------------------------------------------
@@ -244,12 +246,12 @@ const learningData = [
     tag: "STRATEGY",
     duration: "45 min",
     category: "Advanced",
-    image: learning1,
+    image: riskImg,
     videoId: "qN0-ltRAcV4",
     video: "https://youtu.be/qN0-ltRAcV4?si=zeYOrYsMFUtbnTWB",
     embedUrl: "https://www.youtube.com/embed/qN0-ltRAcV4?autoplay=1",
     description: "Tail-risk protection, drawdown mitigation, and dynamic asset rebalancing."
   }
 ];
-
+ 
 export default learningData;

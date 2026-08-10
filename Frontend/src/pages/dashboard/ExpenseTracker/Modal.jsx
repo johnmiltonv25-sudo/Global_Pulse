@@ -1,40 +1,42 @@
-import { useEffect } from "react"
-import { X } from "lucide-react"
-
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+ 
 /**
- * Base modal shell used by every Expense Tracker dialog.
- * Handles the dimmed overlay, click-outside + Escape to close, and scroll lock.
+ * Base modal shell used by Expense Tracker popups.
+ * Renders via React Portal directly into document.body to ensure:
+ * - 100% full-viewport coverage regardless of parent scroll
+ * - Perfect vertical & horizontal centering
+ * - No clipping or transform interference from dashboard containers
  */
-export default function Modal({ open, onClose, children, labelledBy }) {
+export default function Modal({ open, onClose, children, labelledBy, maxWidth = "480px" }) {
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     const onKey = (e) => {
-      if (e.key === "Escape") onClose()
-    }
-    document.addEventListener("keydown", onKey)
-    document.body.style.overflow = "hidden"
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.classList.add("modal-open");
     return () => {
-      document.removeEventListener("keydown", onKey)
-      document.body.style.overflow = ""
-    }
-  }, [open, onClose])
-
-  if (!open) return null
-
-  return (
-    <div className="et-overlay" onMouseDown={onClose}>
+      document.removeEventListener("keydown", onKey);
+      document.body.classList.remove("modal-open");
+    };
+  }, [open, onClose]);
+ 
+  if (!open) return null;
+ 
+  return createPortal(
+    <div className="et-modal-overlay" onMouseDown={onClose}>
       <div
-        className="et-modal"
+        className="et-modal-panel"
+        style={{ maxWidth }}
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <button type="button" className="et-modal__close" onClick={onClose} aria-label="Close dialog">
-          <X size={20} />
-        </button>
         {children}
       </div>
-    </div>
-  )
+    </div>,
+    document.body
+  );
 }

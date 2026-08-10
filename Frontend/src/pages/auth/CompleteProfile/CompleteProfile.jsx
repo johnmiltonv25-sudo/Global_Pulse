@@ -152,9 +152,10 @@ function CompleteProfile() {
           return;
         }
 
-        const userObj = {
+        const userObj = data.user || {
           username: userName.trim(),
           email: email,
+          mobile_number: mobileNumber || undefined,
         };
         localStorage.setItem("user", JSON.stringify(userObj));
         localStorage.setItem("access_token", data.access_token || "demo_token");
@@ -190,9 +191,9 @@ function CompleteProfile() {
           return;
         }
 
-        const userObj = {
+        const userObj = data.user || {
           username: userName.trim(),
-          email: data.user?.email || email.trim() || `${mobileNumber}@mobile.globalpulse`,
+          email: email.trim() || `${mobileNumber}@mobile.globalpulse`,
           mobile_number: mobileNumber,
         };
         localStorage.setItem("user", JSON.stringify(userObj));

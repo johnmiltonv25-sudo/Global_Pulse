@@ -23,6 +23,15 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [query, setQuery] = useState("")
 
+  const storedUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}")
+    } catch {
+      return {}
+    }
+  })()
+  const displayName = storedUser.username || storedUser.name || "User"
+
   const filtered = companies.filter(
     (c) => c.name.toLowerCase().includes(query.toLowerCase()) || c.ticker.toLowerCase().includes(query.toLowerCase()),
   )
@@ -32,7 +41,7 @@ export default function Dashboard() {
       {/* Greeting */}
       <header className="dashboard__greeting">
         <h1 className="dashboard__hello">
-          Hello, John <span aria-hidden="true">&#128075;</span>
+          Hello, {displayName} <span aria-hidden="true">&#128075;</span>
         </h1>
         <p className="dashboard__welcome">Welcome back! Here&apos;s today&apos;s market overview.</p>
       </header>
