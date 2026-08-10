@@ -5,7 +5,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy import or_, func
 from sqlalchemy.orm import Session
 
@@ -169,6 +169,7 @@ def send_real_email_otp(to_email: str, otp_code: str, purpose: str = "Verificati
 @router.post("/send-signup-otp")
 def send_signup_otp(
     request: SendOTPRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     clean_digits = "".join(filter(str.isdigit, request.mobile_number or ""))[-10:]
@@ -217,17 +218,18 @@ def send_signup_otp(
     db.commit()
     db.refresh(otp_record)
 
-    # Dispatch Real SMS via Fast2SMS (if key provided)
-    sms_sent = send_real_sms_otp(request.mobile_number, otp)
+    # Dispatch Real SMS via Fast2SMS in background
+    if request.mobile_number:
+        background_tasks.add_task(send_real_sms_otp, request.mobile_number, otp)
 
-    # Dispatch Real Email OTP via Gmail SMTP to configured SMTP_EMAIL
+    # Dispatch Real Email OTP via Gmail SMTP in background
     smtp_recipient = os.getenv("SMTP_EMAIL", "elakiyajg25@gmail.com")
-    send_real_email_otp(smtp_recipient, otp, f"Mobile Verification ({request.mobile_number})")
+    background_tasks.add_task(send_real_email_otp, smtp_recipient, otp, f"Mobile Verification ({request.mobile_number})")
 
     return {
         "message": "OTP Sent Successfully",
         "mobile_number": request.mobile_number,
-        "sms_sent": sms_sent,
+        "sms_sent": True,
     }
 
 
@@ -238,16 +240,33 @@ def send_signup_otp(
 @router.post("/send-login-otp")
 def send_login_otp(
     request: SendOTPRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
-    # Check if mobile exists in users table
-    user = (
-        db.query(User)
-        .filter(User.mobile_number == request.mobile_number)
-        .first()
-    )
+    clean_digits = "".join(filter(str.isdigit, request.mobile_number or ""))[-10:] if request.mobile_number else ""
 
-    user_id = user.user_id if user else None
+    # Check if mobile exists in users table
+    user = None
+    if clean_digits:
+        user = (
+            db.query(User)
+            .filter(
+                or_(
+                    User.mobile_number == request.mobile_number,
+                    User.mobile_number == clean_digits,
+                    User.mobile_number.like(f"%{clean_digits}"),
+                )
+            )
+            .first()
+        )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mobile number is not registered. Please sign up first.",
+        )
+
+    user_id = user.user_id
 
     # Delete previous unverified OTPs
     db.query(OTPVerification).filter(
@@ -271,17 +290,18 @@ def send_login_otp(
     db.commit()
     db.refresh(otp_record)
 
-    # Dispatch Real SMS via Fast2SMS (if key provided)
-    sms_sent = send_real_sms_otp(request.mobile_number, otp)
+    # Dispatch Real SMS via Fast2SMS in background
+    if request.mobile_number:
+        background_tasks.add_task(send_real_sms_otp, request.mobile_number, otp)
 
-    # Dispatch Real Email OTP via Gmail SMTP to configured SMTP_EMAIL
-    smtp_recipient = os.getenv("SMTP_EMAIL", "elakiyajg25@gmail.com")
-    send_real_email_otp(smtp_recipient, otp, f"Mobile Login Verification ({request.mobile_number})")
+    # Dispatch Real Email OTP via Gmail SMTP in background
+    smtp_recipient = user.email if (user and user.email) else os.getenv("SMTP_EMAIL", "elakiyajg25@gmail.com")
+    background_tasks.add_task(send_real_email_otp, smtp_recipient, otp, f"Mobile Login Verification ({request.mobile_number})")
 
     return {
         "message": "OTP Sent Successfully",
         "mobile_number": request.mobile_number,
-        "sms_sent": sms_sent,
+        "sms_sent": True,
     }
 
 
@@ -446,7 +466,7 @@ def signup(
     final_email = (
         request.email.lower()
         if request.email and request.email.strip()
-        else f"{request.mobile_number or 'user'}@mobile.globalpulse"
+        else f"{(request.username or request.mobile_number or 'user').strip().lower()}@mobile.globalpulse"
     )
 
     # Check duplicate email, username, or mobile
@@ -548,52 +568,82 @@ def complete_profile(
     request: CompleteProfileRequest,
     db: Session = Depends(get_db),
 ):
-    # Check if username or email already exists
-    existing_user = (
-        db.query(User)
-        .filter(
-            or_(
-                User.email == request.email.lower(),
-                User.username == request.username,
-            )
-        )
-        .first()
+    req_username = request.username.strip()
+    req_email = (
+        request.email.strip().lower()
+        if request.email and request.email.strip()
+        else f"{req_username.lower()}@mobile.globalpulse"
     )
 
-    if existing_user:
-        # If user exists, update profile
-        user = existing_user
-        user.username = request.username
-        user.password_hash = hash_password(request.password)
-        user.account_status = "ACTIVE"
-        user.last_login_at = datetime.now(timezone.utc)
-        db.commit()
-    else:
-        # Insert new user in users DB table
-        user = User(
-            username=request.username,
-            email=request.email.lower(),
-            mobile_number=request.mobile_number,
-            password_hash=hash_password(request.password),
-            auth_provider="LOCAL",
-            account_status="ACTIVE",
-            is_mobile_verified=True,
-            is_email_verified=True,
-            last_login_at=datetime.now(timezone.utc),
+    # 1. Check if username is already taken (Case-insensitive)
+    existing_uname = (
+        db.query(User)
+        .filter(func.lower(User.username) == req_username.lower())
+        .first()
+    )
+    if existing_uname:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username is already taken.",
         )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
 
-        # Default subscription
-        sub = UserSubscription(
-            user_id=user.user_id,
-            plan_name="Starter",
-            subscription_status="ACTIVE",
-            payment_status="PAID",
+    # 2. Check if email is already registered
+    existing_email = (
+        db.query(User)
+        .filter(func.lower(User.email) == req_email.lower())
+        .first()
+    )
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already exists. Please log in.",
         )
-        db.add(sub)
-        db.commit()
+
+    # 3. Check if mobile number is already registered
+    if request.mobile_number:
+        clean_mobile = "".join(filter(str.isdigit, request.mobile_number))[-10:]
+        if clean_mobile:
+            existing_mobile = (
+                db.query(User)
+                .filter(
+                    or_(
+                        User.mobile_number == request.mobile_number,
+                        User.mobile_number.like(f"%{clean_mobile}"),
+                    )
+                )
+                .first()
+            )
+            if existing_mobile:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Mobile number already exists. Please log in.",
+                )
+
+    # Insert new user in users DB table
+    user = User(
+        username=req_username,
+        email=req_email,
+        mobile_number=request.mobile_number,
+        password_hash=hash_password(request.password),
+        auth_provider="LOCAL",
+        account_status="ACTIVE",
+        is_mobile_verified=True,
+        is_email_verified=True if request.email else False,
+        last_login_at=datetime.now(timezone.utc),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    # Default subscription
+    sub = UserSubscription(
+        user_id=user.user_id,
+        plan_name="Starter",
+        subscription_status="ACTIVE",
+        payment_status="PAID",
+    )
+    db.add(sub)
+    db.commit()
 
     access_token = create_access_token(
         {"user_id": user.user_id, "email": user.email}
@@ -627,10 +677,10 @@ def google_signup_complete(
     email_clean = request.email.strip().lower()
     username_clean = request.username.strip()
 
-    existing_username = db.query(User).filter(User.username == username_clean).first()
+    existing_username = db.query(User).filter(func.lower(User.username) == username_clean.lower()).first()
     if existing_username:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Username is already taken.",
         )
 
@@ -815,8 +865,13 @@ def google_login(
         is_new = False
         if not user:
             is_new = True
+            base_username = "".join(c for c in google_name.replace(" ", "_").lower() if c.isalnum() or c == "_") or "google_user"
+            unique_username = base_username
+            while db.query(User).filter(func.lower(User.username) == unique_username.lower()).first():
+                unique_username = f"{base_username}_{random.randint(100, 999)}"
+
             user = User(
-                username=google_name.replace(" ", "_").lower(),
+                username=unique_username,
                 email=google_email,
                 auth_provider="GOOGLE",
                 is_email_verified=True,
@@ -915,6 +970,7 @@ def logout(
 @router.post("/forgot-password")
 def forgot_password(
     request: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     identifier = request.identifier.strip().lower()
@@ -983,13 +1039,13 @@ def forgot_password(
     db.add(otp_record)
     db.commit()
 
-    # Send SMS if mobile number exists
+    # Send SMS if mobile number exists in background
     if user.mobile_number:
-        send_real_sms_otp(user.mobile_number, otp)
+        background_tasks.add_task(send_real_sms_otp, user.mobile_number, otp)
 
-    # Send Real-Time Email OTP if email exists
+    # Send Real-Time Email OTP if email exists in background
     if user.email:
-        send_real_email_otp(user.email, otp, purpose="Password Reset")
+        background_tasks.add_task(send_real_email_otp, user.email, otp, "Password Reset")
 
     return {
         "message": "Verification code generated successfully.",

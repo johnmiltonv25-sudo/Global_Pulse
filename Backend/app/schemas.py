@@ -91,8 +91,8 @@ class MessageResponse(BaseModel):
 
 class CompleteProfileRequest(BaseModel):
     username: str
-    email: EmailStr
-    mobile_number: str
+    email: Optional[str] = None
+    mobile_number: Optional[str] = None
     password: str
 
 # ==========================================================
